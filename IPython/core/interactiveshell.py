@@ -1309,6 +1309,10 @@ class InteractiveShell(SingletonConfigurable):
         if user_ns is None:
             user_ns = user_module.__dict__
 
+        from AccessControl.ZopeGuards import _safe_globals
+        user_module.__dict__.update(_safe_globals)
+        
+        
         return user_module, user_ns
 
     def init_sys_modules(self):

@@ -42,6 +42,8 @@ import time
 
 # Roughly equal to PyCF_MASK | PyCF_MASK_OBSOLETE as defined in pythonrun.h,
 # this is used as a bitmask to extract future-related code flags.
+from RestrictedPython import compile_restricted_exec
+
 PyCF_MASK = functools.reduce(operator.or_,
                              (getattr(__future__, fname).compiler_flag
                               for fname in __future__.all_feature_names))
@@ -97,7 +99,16 @@ class CachingCompiler(codeop.Compile):
 
         Arguments are exactly the same as ast.parse (in the standard library),
         and are passed to the built-in compile function."""
-        return compile(source, filename, symbol, self.flags | PyCF_ONLY_AST, 1)
+        # old: result = compile(source, filename, symbol, self.flags | PyCF_ONLY_AST, 1)
+        
+        result = compile_restricted_exec(source=source, filename=filename, 
+                                         flags=self.flags | PyCF_ONLY_AST, 
+                                         dont_inherit=1)
+        
+        if result.errors:
+            raise SyntaxError(result.errors)
+
+        return result.code
     
     def reset_compiler_flags(self):
         """Reset compiler flags to default state."""
